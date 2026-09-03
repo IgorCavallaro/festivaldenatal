@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Festival de Natal 2026 · Nova Estação Church</title>
+<meta name="description" content="Painel de gestão do Festival de Natal 2026 — Nova Estação Church" />
+<meta name="theme-color" content="#1E3A5F" />
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+<!-- Fonte -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+
+<!-- Tailwind (via CDN, sem build step) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- React (JSX já pré-compilado — sem transpilação no navegador) -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  body { font-family: 'Inter', sans-serif; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then((reg) => {
+          // verifica se já existe uma versão nova esperando
+          if (reg.waiting) showUpdateBanner(reg);
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateBanner(reg);
+              }
+            });
+          });
+        }).catch(() => {});
+
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshing) return;
+          refreshing = true;
+          window.location.reload();
+        });
+      });
+    }
+
+    function showUpdateBanner(reg) {
+      if (document.getElementById('update-banner')) return;
+      const bar = document.createElement('div');
+      bar.id = 'update-banner';
+      bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1E3A5F;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:12px;font-family:Inter,sans-serif;font-size:13px;box-shadow:0 -2px 10px rgba(0,0,0,.2);';
+      bar.innerHTML = '<span>🎄 Nova versão do painel disponível</span><button id="update-btn" style="background:#2563EB;color:#fff;border:none;padding:6px 14px;border-radius:999px;font-weight:600;font-size:12px;cursor:pointer;">Atualizar agora</button>';
+      document.body.appendChild(bar);
+      document.getElementById('update-btn').onclick = () => {
+        if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      };
+    }
+  </script>
+</body>
+</html>
